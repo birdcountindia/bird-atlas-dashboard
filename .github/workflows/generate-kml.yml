@@ -27,27 +27,35 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Generate KML
+      - name: Generate KML + GPX
         run: node generate-kml.js
 
-      # Publishes every .kml as an asset on a single, fixed-tag release.
-      # Same tag every run => the download URLs never change; assets are
+      # Publishes every .kml and .gpx as an asset on a single, fixed-tag
+      # release. Same tag every run => download URLs never change; assets are
       # overwritten with the freshest files each time.
-      # NOTE: files path is relative to the repo root, so it includes js/.
-      - name: Publish KML to fixed release
+      # NOTE: files paths are relative to the repo ROOT, so they include js/.
+      - name: Publish to fixed release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: kml-latest
-          name: Latest KML
-          body: "Auto-generated KML files. Regenerated on each workflow run."
-          files: js/kml/*.kml
+          name: Latest KML + GPX
+          body: "Auto-generated KML and GPX files. Regenerated on each workflow run."
+          files: |
+            js/kml/*.kml
+            js/gpx/*.gpx
           make_latest: "true"
 
       # Prints the permanent one-click download links into the run summary.
       - name: Show download links
         run: |
-          echo "### KML download links" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Download links" >> "$GITHUB_STEP_SUMMARY"
+          echo "#### KML" >> "$GITHUB_STEP_SUMMARY"
           for f in kml/*.kml; do
+            n=$(basename "$f")
+            echo "- https://github.com/${{ github.repository }}/releases/download/kml-latest/$n" >> "$GITHUB_STEP_SUMMARY"
+          done
+          echo "#### GPX" >> "$GITHUB_STEP_SUMMARY"
+          for f in gpx/*.gpx; do
             n=$(basename "$f")
             echo "- https://github.com/${{ github.repository }}/releases/download/kml-latest/$n" >> "$GITHUB_STEP_SUMMARY"
           done
