@@ -569,6 +569,8 @@ const BirdCount = (function () {
             this._addKmlStyles(documentNode, 'cluster', '66ff9900'); 
 
             _(this.rectangleInfos).each(function (rectangleInfo) {
+                const subCellName = rectangleInfo.getValue('subCell');
+                const siteName = rectangleInfo.getValue('site');
                 const options = {
                     pathString: this.polygonPathsFromBounds(rectangleInfo.options.bounds),
                     description: kmlDescription(rectangleInfo.options),
@@ -580,30 +582,28 @@ const BirdCount = (function () {
             }, this);
 
             if (this.showCluster && this.clusterLayerGroup) {
-                this.clusterLayerGroup.eachLayer(function (layer) {
-                    const latlngs = layer.getLatLngs()[0]; 
-                    let pathString = '';
-                    latlngs.forEach(function(ll) {
-                        
-                        const lng = Array.isArray(ll) ? ll[1] : ll.lng;
-                        const lat = Array.isArray(ll) ? ll[0] : ll.lat;
-                        pathString += lng + "," + lat + ",0 ";
-                    });
-                    
-                    const first = latlngs[0];
-                    const fLng = Array.isArray(first) ? first[1] : first.lng;
-                    const fLat = Array.isArray(first) ? first[0] : first.lat;
-                    pathString += fLng + "," + fLat + ",0 ";
+                // clusterLayerGroup holds L.geoJSON groups; drill into each to reach
+                // the actual polygon layers before reading their coordinates.
+                this.clusterLayerGroup.eachLayer(function (geoJsonLayer) {
+                    geoJsonLayer.eachLayer(function (poly) {
+                        if (typeof poly.getLatLngs !== 'function') return;
+                        let ring = poly.getLatLngs();
+                        // Polygons nest their rings; unwrap to the outer ring of LatLngs.
+                        while (ring.length && Array.isArray(ring[0])) ring = ring[0];
+                        if (!ring.length) return;
 
-                    const name = layer.getTooltip() ? layer.getTooltip().getContent() : "Cluster";
-                    const options = {
-                        pathString: pathString,
-                        description: '',
-                        name: name,
-                        style: 'cluster',
-                        drawOrder: 1
-                    };
-                    this.addPlacemark(documentNode, options);
+                        let pathString = '';
+                        ring.forEach(function (ll) { pathString += ll.lng + "," + ll.lat + ",0 "; });
+                        pathString += ring[0].lng + "," + ring[0].lat + ",0 "; // close the ring
+
+                        this.addPlacemark(documentNode, {
+                            pathString: pathString,
+                            description: '',
+                            name: 'Cluster',
+                            style: 'cluster',
+                            drawOrder: 1
+                        });
+                    }, this);
                 }, this);
             }
             return serializer.serializeToString(xmlDoc);
