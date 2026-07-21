@@ -224,10 +224,13 @@ html, body {
     right: 130px;             /* clears Leaflet's top-right layer + hamburger controls */
     height: auto;             /* override the `.map-parent>div { height:100% }` rule */
     z-index: 1000;
-    display: flex;
+    display: none;            /* hidden until a leaf map has finished loading */
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 8px;
+}
+#map-search-controls.is-ready {
+    display: flex;            /* revealed once the map + layers/hamburger are up */
 }
 
 .floating-search-bar {

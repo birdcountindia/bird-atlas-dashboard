@@ -127,6 +127,10 @@ function initializeRouter(rootData) {
             // Immediately reset the global flag for future navigations
             isNavigatingBack = false;
 
+            // Hide the search bars during navigation; a leaf map re-shows them
+            // once it has finished loading (see birdcount.js drawMap / recenter).
+            $('#map-search-controls').removeClass('is-ready');
+
             const parts = [];
             let path = ""; 
             

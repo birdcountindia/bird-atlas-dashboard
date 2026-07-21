@@ -193,6 +193,9 @@ const BirdCount = (function () {
                 this._pendingCoord = null;
                 this.plotCoordinate(p.lat, p.lng);
             }
+
+            // Leaf sheet read and the map + layers/hamburger are up: reveal the search bars.
+            $('#map-search-controls').addClass('is-ready');
         },
 
         processCoordinates: function (rows) {
@@ -698,6 +701,10 @@ const BirdCount = (function () {
             // Re-attach the search bars to this map every time it is shown
             // (covers both freshly created maps and cached/re-visited ones).
             this.bindSearchControls();
+
+            // A cached map is already fully loaded, so reveal its bars immediately.
+            // (A freshly created map has no this.map yet - drawMap reveals it later.)
+            if (this.map) $('#map-search-controls').addClass('is-ready');
 
             if (this.map && this.dataBounds) {
                
